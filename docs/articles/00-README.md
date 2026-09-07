@@ -197,3 +197,193 @@ SHA256:
 > **不要让结论走得比证据更远。**
 
 从 OEM binary、寄存器和 MCU command，到实体设备、Production Final，再到 upstream scope review，这条原则贯穿了整个 DIR-X3260 项目。
+
+---
+
+# 扩展文章
+
+前四篇主要记录 DIR-X3260 的核心技术问题、逆向过程与 upstream 工程；下面三篇补充刷机恢复、OEM 固件格式以及 Production Final 的工程方法。
+
+## 5. OpenWrt 刷机 / Recovery / 救砖
+
+**[05-《刷机 - Recovery - 救砖》](05-%E3%80%8A%E5%88%B7%E6%9C%BA%20-%20Recovery%20-%20%E6%95%91%E7%A0%96%E3%80%8B.md)**
+
+主题：
+
+> **D-Link DIR-X3260 A1 OpenWrt 完整刷机、Recovery 与救砖指南**
+
+主要内容：
+
+- D-Link Recovery 与 OpenWrt 两个不同管理网段
+- Recovery：`192.168.0.xxx`
+- OpenWrt：`192.168.1.xxx`
+- `sysupgrade -T`
+- `sysupgrade` / `sysupgrade -n`
+- Known-Good Baseline
+- Reboot Loop 后的恢复流程
+- 2.4 GHz / 5 GHz / Internet / LED 完整验证
+- 冷启动验证
+- 为什么重新编译的 binary 不能自动继承 Production Final 身份
+
+这篇文章面向实际刷机和恢复，是整个系列中最偏实用操作的一篇。
+
+---
+
+## 6. D-Link SHRS 固件完整逆向
+
+**[06-《SHRS 固件完整逆向》](06-%E3%80%8ASHRS%20%E5%9B%BA%E4%BB%B6%E5%AE%8C%E6%95%B4%E9%80%86%E5%90%91%E3%80%8B.md)**
+
+主题：
+
+> **如何逆向 D-Link SHRS 固件：从加密容器到可验证的 Firmware Round-Trip**
+
+完整分析链：
+
+```text
+SHRS
+  ↓
+0x6dc header
+  ↓
+AES-128-CBC
+  ↓
+SHA-512
+  ↓
+4096-bit RSA
+  ↓
+13-byte footer
+  ↓
+FIT
+  ↓
+DTB
+  ↓
+SquashFS
+  ↓
+OEM imgdecrypt
+  ↓
+Firmware Round-Trip
+```
+
+这篇文章记录整个项目最早期的重要突破：如何从 D-Link OEM 加密 firmware 中恢复真正的 Linux firmware，并最终验证 container、hash、signature 与内部 payload 之间的关系。
+
+后续 MT7622 / MT7915 OEM driver reverse engineering，正是建立在这一步之上。
+
+---
+
+## 7. 从 Reboot Loop 到 Production Gate
+
+**[07-《Production Gate 工程方法》](07-%E3%80%8AProduction%20Gate%20%E5%B7%A5%E7%A8%8B%E6%96%B9%E6%B3%95%E3%80%8B.md)**
+
+主题：
+
+> **一次 Reboot Loop 教会我们的事：从 Known-Good Baseline 到 Production Gate**
+
+核心原则：
+
+```text
+能编译
+≠
+能启动
+
+能启动
+≠
+网络正常
+
+网络正常
+≠
+Production Final
+```
+
+文章以本项目真实经历的：
+
+```text
+STAGE55 reboot loop
+        ↓
+Known-Good rollback
+        ↓
+Internet regression
+        ↓
+STAGE72 candidate
+        ↓
+STAGE73 provenance
+        ↓
+STAGE74 physical hardware validation
+        ↓
+Production Freeze
+```
+
+为主线，说明为什么嵌入式 firmware 必须建立：
+
+- Known-Good Baseline
+- Recovery path
+- Binary SHA256
+- Source provenance
+- 重复状态转换测试
+- Cold boot validation
+- Release freeze
+- Archive / backup
+- Evidence boundary
+
+这也是整个 DIR-X3260 项目最后形成的工程方法论。
+
+---
+
+# D-Link 官方资料
+
+为了方便核对 DIR-X3260 A1 的官方硬件规格，本目录同时保存 D-Link 原始资料：
+
+- **[DIR-X3260 A1 Datasheet](DIR-X3260_REVA1_Datasheet_v1.01_%28WW%29.pdf)**
+- **[DIR-X3260 A1 User Manual](DIR-X3260_REVA1_Manual_v1.01_%28WW%29.pdf)**
+
+> 产品规格以 D-Link 官方 Datasheet 和 User Manual 为依据。  
+> MT7622、MT7915、WPDMA、ownership、OEM binary 以及 MT7915 MCU LED protocol 等实现细节，则来自本项目的 OEM firmware / binary 逆向、OpenWrt runtime 分析与实体硬件验证。
+
+---
+
+# 完整文章系列
+
+```text
+01  MT7622 Wi-Fi 根因
+    DriverOwn / IOC / WPDMA
+
+02  MT7915 5G LED MCU 逆向
+    OEM Andes MCU protocol
+
+03  DIR-X3260 OpenWrt 逆向工程全记录
+    OEM → OpenWrt → Production Final
+
+04  Upstream Linux/mt76 Patch 工程
+    Downstream fix → upstream candidate
+
+05  刷机 / Recovery / 救砖
+    Safe flashing / rollback / hardware validation
+
+06  SHRS 固件完整逆向
+    Encryption / RSA / FIT / Round-Trip
+
+07  Production Gate 工程方法
+    Known-Good / provenance / freeze
+```
+
+至此，DIR-X3260 系列文章形成完整的三条主线：
+
+```text
+Firmware Reverse Engineering
+        │
+        ├── 06 SHRS
+        ├── 01 MT7622
+        └── 02 MT7915 LED
+
+Project / Production Engineering
+        │
+        ├── 03 项目全记录
+        ├── 05 Recovery / 救砖
+        └── 07 Production Gate
+
+Upstream Engineering
+        │
+        └── 04 Linux / mt76 Patch
+```
+
+> **不要让结论走得比证据更远。**
+>
+> 从 OEM firmware、寄存器和 MCU command，到实体设备、Production Final，再到 upstream scope review，这条原则贯穿了整个 DIR-X3260 OpenWrt 项目。
