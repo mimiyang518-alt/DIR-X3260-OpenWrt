@@ -4,6 +4,37 @@ OpenWrt support, reverse engineering, MT7622 Wi-Fi fixes and MT7915 OEM LED rese
 
 **Status: KNOWN-GOOD PRODUCTION FINAL — 2026-09-06**
 
+## Download firmware
+
+**Latest hardware-validated release: v1.0.0**
+
+[Download DIR-X3260 OpenWrt v1.0.0](https://github.com/mimiyang518-alt/DIR-X3260-OpenWrt/releases/tag/v1.0.0)
+
+Release assets include:
+
+- `DIRX3260-A1-STAGE72-FINAL-PRODUCTION-SYSUPGRADE.bin`
+- `DIRX3260-A1-STAGE72-FINAL-PRODUCTION-RECOVERY.bin`
+- `SHA256SUMS.txt`
+- `INSTALL.md` — English installation guide
+- `INSTALL-ZH-CN.md` — 中文安装说明
+
+> **Important:** The hardware-validated status applies to the exact binaries and SHA256 values listed below. A later rebuild from the same source is not automatically hardware validated.
+
+## Installation
+
+Before flashing, read the installation guide included with the v1.0.0 Release:
+
+- **English:** `INSTALL.md`
+- **中文:** `INSTALL-ZH-CN.md`
+
+Quick network reminder:
+
+- D-Link Bootloader Recovery: configure the computer on `192.168.0.x`, then open `http://192.168.0.1`
+- After OpenWrt boots: use the `192.168.1.x` network; OpenWrt is available at `http://192.168.1.1`
+- After testing, the computer can normally be returned to automatic DHCP
+
+For an existing compatible OpenWrt installation, verify the sysupgrade image first with `sysupgrade -T` before flashing.
+
 ## Hardware-validated result
 
 - MT7622 2.4 GHz: working (`OpenWRT`)
